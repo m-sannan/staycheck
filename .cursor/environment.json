@@ -1,0 +1,11 @@
+{
+  "name": "StayCheck",
+  "install": "npm ci",
+  "terminals": [
+    {
+      "name": "extension-dev",
+      "command": "npm run dev",
+      "description": "Vite dev server with hot reload for the Chrome extension (load unpacked from dist/)."
+    }
+  ]
+}

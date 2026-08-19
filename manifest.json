@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "StayCheck",
+  "version": "0.1.0",
+  "description": "A second opinion before you book — cross-check Booking.com hotels with Google Maps.",
+  "action": {
+    "default_popup": "src/popup/popup.html",
+    "default_title": "StayCheck"
+  },
+  "permissions": ["activeTab"],
+  "host_permissions": ["https://www.booking.com/*"],
+  "content_scripts": [
+    {
+      "matches": ["https://www.booking.com/hotel/*"],
+      "js": ["src/content/content.ts"],
+      "run_at": "document_idle"
+    }
+  ],
+  "background": {
+    "service_worker": "src/background/service-worker.ts",
+    "type": "module"
+  }
+}
