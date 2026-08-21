@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "StayCheck (personal)",
+  "version": "0.1.0",
+  "description": "Shows a Google Maps review check on Booking.com property pages.",
+  "permissions": ["storage", "activeTab"],
+  "host_permissions": ["http://127.0.0.1:8787/*"],
+  "background": { "service_worker": "background.js" },
+  "action": { "default_title": "StayCheck", "default_popup": "popup.html" },
+  "content_scripts": [{
+    "matches": ["https://www.booking.com/hotel/*", "https://*.booking.com/hotel/*"],
+    "js": ["content.js"],
+    "css": ["content.css"],
+    "run_at": "document_idle"
+  }]
+}
