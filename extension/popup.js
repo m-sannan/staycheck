@@ -1,0 +1,7 @@
+const status = document.querySelector('#status');
+const logs = document.querySelector('#logs');
+function pretty(entry) { return `${entry.event}${entry.detail ? ` · ${entry.detail}` : ''}`; }
+async function render() { const { staycheckLogs = [], staycheckLastStatus } = await chrome.storage.local.get({ staycheckLogs: [], staycheckLastStatus: null }); status.textContent = staycheckLastStatus ? `Last: ${pretty(staycheckLastStatus)}` : 'No checks recorded yet.'; logs.replaceChildren(...staycheckLogs.slice(-8).reverse().map((entry) => { const item = document.createElement('li'); const title = document.createElement('strong'); title.textContent = pretty(entry); const time = document.createElement('span'); time.textContent = new Date(entry.at).toLocaleString(); item.append(title, time); return item; })); }
+document.querySelector('#force').addEventListener('click', async () => { const [tab] = await chrome.tabs.query({ active: true, currentWindow: true }); try { const reply = await chrome.tabs.sendMessage(tab.id, { type: 'staycheck-force-run' }); status.textContent = reply?.ok ? 'Check started on this page.' : 'StayCheck is unavailable on this page.'; } catch { status.textContent = 'Open a Booking.com hotel property page, then try again.'; } });
+document.querySelector('#copy').addEventListener('click', async () => { const { staycheckLogs = [] } = await chrome.storage.local.get({ staycheckLogs: [] }); await navigator.clipboard.writeText(JSON.stringify(staycheckLogs, null, 2)); status.textContent = 'Diagnostics copied.'; });
+render();

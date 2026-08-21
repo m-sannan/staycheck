@@ -1,0 +1,5 @@
+const IGNORED = new Set(['hotel', 'the', 'and', 'inn', 'by', 'a', 'an']);
+export function tokens(value = '') { return new Set(String(value).toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter((token) => token && !IGNORED.has(token))); }
+export function overlap(left, right) { const a = tokens(left); const b = tokens(right); if (!a.size || !b.size) return 0; return [...a].filter((token) => b.has(token)).length / new Set([...a, ...b]).size; }
+export function candidate(listing, place) { const nameScore = overlap(listing.name, place.displayName?.text); const addressScore = overlap(listing.address, place.formattedAddress); return { id: place.id, name: place.displayName?.text || 'Unnamed place', address: place.formattedAddress || '', rating: place.rating, reviewCount: place.userRatingCount || 0, mapsUrl: place.googleMapsUri, confidence: Math.round((nameScore * 0.7 + addressScore * 0.3) * 100), nameScore, addressScore }; }
+export function isConfident(match) { return match.confidence >= 55 && match.addressScore >= 0.25; }
