@@ -1,0 +1,14 @@
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "staycheck-api",
+  "main": "src/index.js",
+  "compatibility_date": "2026-08-22",
+  "observability": { "enabled": true, "head_sampling_rate": 1 },
+  "secrets": { "required": ["GOOGLE_MAPS_API_KEY", "RATE_LIMIT_SALT"] },
+  "d1_databases": [{
+    "binding": "USAGE",
+    "database_name": "staycheck-usage",
+    "database_id": "76a3281b-ebfc-4934-a7fd-707169232ca1",
+    "migrations_dir": "migrations"
+  }]
+}

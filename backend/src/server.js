@@ -28,7 +28,7 @@ export function createServer(places = client) {
         const found = await places.search(payload);
         const candidates = (found.places || []).slice(0, 3).map((place) => candidate(payload, place));
         const match = candidates.find(isConfident);
-        return respond(response, 200, match ? { status: 'matched', place: match } : { status: 'choose', candidates }, origin);
+        return respond(response, 200, match ? { status: 'matched', place: match, candidates } : { status: 'choose', candidates }, origin);
       }
       if (request.method === 'POST' && request.url === '/details') {
         if (typeof payload.placeId !== 'string' || payload.placeId.length > 300) return respond(response, 400, { error: 'A Google place ID is required.' }, origin);
