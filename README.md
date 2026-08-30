@@ -27,7 +27,7 @@ When you select a candidate, StayCheck saves that Google Place ID only in Chrome
 2. Create an API key. Copy `.env.example` to `.env`, then set `GOOGLE_MAPS_API_KEY` to that key.
 3. Run `npm start` from this repository. Keep the terminal open while you use the extension.
 4. In Chrome, visit `chrome://extensions`, enable **Developer mode**, choose **Load unpacked**, and select `extension/`.
-5. Open a Booking.com hotel property page.
+5. Open a hotel property page on Booking.com, Agoda, or Expedia.
 
 The local companion service listens only on `127.0.0.1` and keeps the API key on your laptop. The hosted Worker is the public deployment path. There are no accounts, analytics, payment flow, or review cache. The local match key uses the normalized hotel name/address, so future Expedia and Agoda extractors can reuse a confirmed match for the same property. If an address is missing, the site hostname is included to avoid unsafe name-only sharing.
 
