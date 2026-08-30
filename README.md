@@ -6,7 +6,7 @@ StayCheck is a Chrome extension for Booking.com, Agoda, and Expedia hotel proper
 
 ## What it does
 
-When a Booking.com property page opens, StayCheck reads the displayed hotel name and address, asks a companion service running on your laptop to find the Google Maps place, and adds a panel near the Booking.com score.
+When you open a supported hotel property page, StayCheck reads the displayed hotel name and address, asks a companion service running on your laptop to find the Google Maps place, and adds a panel near the property's score.
 
 The panel shows:
 
