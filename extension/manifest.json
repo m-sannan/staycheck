@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "StayCheck",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Shows a Google Maps review check on Booking.com, Agoda, and Expedia property pages.",
   "icons": {
     "16": "assets/icon-16.png",
