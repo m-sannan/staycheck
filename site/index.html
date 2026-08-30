@@ -17,6 +17,10 @@
     /* StayCheck brand palette: derived from the purple extension mark. */
     :root{--ink:#251f3d;--muted:#6d6780;--line:#e3dff2;--forest:#6957bc;--forest-dark:#4d3c97;--mint:#efecfb;--cream:#fdfcff;--page:#faf9ff}.hero{background:radial-gradient(circle at 7% 12%,#ebe7fb 0,transparent 30%),radial-gradient(circle at 98% 6%,#f7eacb 0,transparent 23%),var(--cream)}.eyebrow{border-color:#d9d1f4;background:#f7f5ff;color:#51428f}.eyebrow::before{background:#7a67d1}.mockup-wrap::before{background:#cfc6f3}.section-kicker{color:#6856b2}.value-section{background:#f1effb}.trust-box{border-color:#ddd7f2}.maps-note{color:#5d5870}.footer-links a:hover{color:#6957bc}.story{padding:96px 0;background:#fff}.story-grid{display:grid;grid-template-columns:.78fr 1.22fr;gap:66px;align-items:start}.story-label{display:inline-block;margin:0 0 16px;color:#6856b2;font-size:13px;font-weight:850;letter-spacing:.08em;text-transform:uppercase}.story h2{margin:0;font-size:clamp(34px,4.5vw,56px);letter-spacing:-.06em;line-height:1.04}.story-copy{max-width:650px;margin:0;color:var(--muted);font-size:18px}.story-copy p{margin:0 0 20px}.story-copy em{color:#4d3c97}.story-thought{margin-top:29px;padding:20px 22px;border-left:3px solid #6957bc;border-radius:0 13px 13px 0;background:#f7f5ff;color:#322755;font-size:20px;font-weight:760;letter-spacing:-.025em}@media(max-width:850px){.story{padding:68px 0}.story-grid{grid-template-columns:1fr;gap:24px}}
   </style>
+  <style>
+    /* Hero hierarchy: keep the hook punchy while bringing the product and CTA above the fold. */
+    .hero{padding-bottom:72px}.hero-grid{grid-template-columns:minmax(0,1fr) minmax(440px,.95fr);align-items:start;gap:56px;padding-top:42px}.hero h1{max-width:650px;font-size:clamp(39px,4.1vw,61px);line-height:1.06}.hero-copy{max-width:590px;margin:19px 0 22px;font-size:16px;line-height:1.55}.hero-copy p{margin:0 0 11px}.hero-copy strong{color:#4d3c97}.mockup-wrap{align-self:start;margin-top:80px}.preview-note{margin-top:9px}@media(max-width:850px){.hero-grid{grid-template-columns:1fr;gap:28px;padding-top:30px}.mockup-wrap{margin-top:0}.hero h1{max-width:680px;font-size:clamp(38px,9.5vw,58px)}.hero-copy{font-size:16px}}@media(max-width:540px){.hero{padding-bottom:58px}.hero h1{font-size:39px;line-height:1.08}.hero-copy{margin-top:16px}}
+  </style>
 </head>
 <body>
   <main>
@@ -25,8 +29,8 @@
         <nav class="nav" aria-label="Primary navigation"><a class="brand" href="./"><img src="assets/icon-128.png" alt=""><span>StayCheck</span></a><a class="nav-link" href="#how-it-works">How it works</a></nav>
         <div class="hero-grid">
           <div>
-            <p class="eyebrow">A little more digging. A lot less regret.</p><h1>Ever booked a hotel with a 5/5 rating…<br><em>…and got there to find out it was total sh#*?</em></h1>
-            <p class="hero-copy">Yeah. Us too.<br><br>So we built a stupidly simple way to avoid it.<br><br><strong>StayCheck.</strong><br><br>It checks the same hotel on Google Maps while you’re browsing Booking.com, Agoda, or Expedia. See what people on another site had to say before you book.</p>
+            <p class="eyebrow">A little more digging. A lot less regret.</p><h1>Ever booked a hotel with a 5/5 rating… <em>…and got there to find out it was total sh#*?</em></h1>
+            <div class="hero-copy"><p>Yeah. Us too.</p><p>So we built a stupidly simple way to avoid it.</p><p><strong>StayCheck.</strong> It checks the same hotel on Google Maps while you’re browsing Booking.com, Agoda, or Expedia. See what people on another site had to say before you book.</p></div>
             <div class="hero-actions"><a class="button" href="https://chromewebstore.google.com/detail/mjgdchcpacfmgocenlemmbecmcbiahkb" target="_blank" rel="noopener noreferrer">Add to Chrome <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 3h8v8h-2V6.4l-9.3 9.3-1.4-1.4L17.6 5H13V3ZM5 5h5v2H7v10h10v-3h2v5H5V5Z"/></svg></a><span class="no-account">Free. No account. Just check before you check in.</span></div>
             <div class="supported" aria-label="Supported sites"><span>Booking.com property pages</span><span>Agoda property pages</span><span>Expedia property pages</span></div>
           </div>
