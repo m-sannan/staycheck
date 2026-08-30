@@ -21,9 +21,9 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   installationId().then((id) => fetch(`${API}${message.path}`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-StayCheck-Installation': id }, body: JSON.stringify(message.body) }))
     .then(async (response) => {
       const payload = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(payload.error || `Local companion returned ${response.status}.`);
+      if (!response.ok) throw new Error(payload.error || `StayCheck returned ${response.status}.`);
       sendResponse({ ok: true, payload });
     })
-    .catch((error) => sendResponse({ ok: false, error: error.message || 'Could not reach the local companion.' }));
+    .catch((error) => sendResponse({ ok: false, error: error.message || 'Could not reach the StayCheck review service.' }));
   return true;
 });

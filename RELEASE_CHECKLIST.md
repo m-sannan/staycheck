@@ -8,9 +8,14 @@
 - [x] Add Booking.com, Agoda, and Expedia property-page support.
 - [x] Add local saved matches, stricter confidence handling, and a user-facing force-check control.
 - [x] Replace the temporary personal-build name and align the popup with the final logo palette.
-- [ ] Recheck Google Maps attribution and source-link display requirements.
-- [ ] Complete real-browser regression testing on Booking.com, Agoda, and Expedia after the latest changes.
-- [ ] Publish a privacy policy and add its URL to the Chrome Web Store listing.
-- [ ] Upload the extension as unlisted, then set `ALLOWED_EXTENSION_ID` in the Worker using the final Store extension ID.
-- [ ] Prepare Chrome Web Store listing copy, screenshots, support contact, and permission explanations.
-- [ ] Bump the extension version to `1.0.0` for the first public release.
+- [x] Recheck Google Maps attribution and source-link display (author name, photo when provided, profile link, Maps/source links, Google Maps labeling).
+- [x] Publish a privacy policy file in-repo (`docs/privacy.html`). Host it on HTTPS (GitHub Pages or equivalent) and paste that URL into the Store listing.
+- [x] Prepare Chrome Web Store listing copy, permission explanations, and screenshot list (`docs/chrome-web-store.md`).
+- [x] Bump the extension version to `1.0.0` for the first public release.
+- [x] Package the extension (`npm run pack` → `dist/staycheck-extension.zip`).
+- [ ] Complete real-browser regression testing on Booking.com, Agoda, and Expedia after loading `extension/` unpacked.
+- [ ] Enable GitHub Pages (or another HTTPS host) for `docs/privacy.html`.
+- [ ] Pay the Chrome Web Store $5 developer fee if needed, then upload the zip as **unlisted**.
+- [ ] Set `ALLOWED_EXTENSION_ID` in the Worker using the final Store extension ID, then redeploy.
+- [ ] Capture Store screenshots from a real Chrome window on all three sites.
+- [ ] Switch the listing from unlisted to public after the unlisted install works.

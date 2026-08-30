@@ -9,11 +9,11 @@ loadEnv();
 const port = Number(process.env.PORT || 8787);
 const client = new PlacesClient(process.env.GOOGLE_MAPS_API_KEY || '');
 
-function allowedOrigin(origin) { return /^https:\/\/([a-z0-9-]+\.)?booking\.com$/i.test(origin || '') || /^chrome-extension:\/\//.test(origin || ''); }
+function allowedOrigin(origin) { return /^https:\/\/([a-z0-9-]+\.)?(booking|agoda)\.com$/i.test(origin || '') || /^https:\/\/([a-z0-9-]+\.)?expedia\.[a-z.]+$/i.test(origin || '') || /^chrome-extension:\/\//.test(origin || ''); }
 function respond(response, status, body, origin) { response.writeHead(status, { 'Content-Type': 'application/json', ...(origin ? { 'Access-Control-Allow-Origin': origin, Vary: 'Origin', 'Access-Control-Allow-Headers': 'Content-Type', 'Access-Control-Allow-Methods': 'POST, OPTIONS', 'Access-Control-Allow-Private-Network': 'true' } : {}) }); response.end(JSON.stringify(body)); }
 async function body(request) { let text = ''; for await (const chunk of request) { text += chunk; if (text.length > 10_000) throw new Error('Request too large.'); } return JSON.parse(text || '{}'); }
 function validListing(value) { return value && typeof value.name === 'string' && value.name.trim().length > 1 && value.name.length < 200 && (!value.address || typeof value.address === 'string'); }
-function publicDetails(place) { return { name: place.displayName?.text, address: place.formattedAddress, rating: place.rating, reviewCount: place.userRatingCount || 0, mapsUrl: place.googleMapsUri, reviews: (place.reviews || []).slice(0, 5).map((review) => ({ author: review.authorAttribution?.displayName || 'Google user', authorUrl: review.authorAttribution?.uri, rating: review.rating, text: review.text?.text || '', relativeDate: review.relativePublishTimeDescription, publishedAt: review.publishTime, mapsUrl: review.googleMapsUri })) }; }
+function publicDetails(place) { return { name: place.displayName?.text, address: place.formattedAddress, rating: place.rating, reviewCount: place.userRatingCount || 0, mapsUrl: place.googleMapsUri, reviews: (place.reviews || []).slice(0, 5).map((review) => ({ author: review.authorAttribution?.displayName || 'Google user', authorUrl: review.authorAttribution?.uri, authorPhoto: review.authorAttribution?.photoUri || '', rating: review.rating, text: review.text?.text || '', relativeDate: review.relativePublishTimeDescription, publishedAt: review.publishTime, mapsUrl: review.googleMapsUri })) }; }
 
 export function createServer(places = client) {
   return http.createServer(async (request, response) => {
