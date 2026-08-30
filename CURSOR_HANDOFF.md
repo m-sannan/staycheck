@@ -49,7 +49,7 @@ npm test
 npm run worker:dev
 ```
 
-Load `extension/` as an unpacked extension in Chrome. After changing extension files, reload it in `chrome://extensions`, then refresh a supported property page.
+Load `extension/` as an unpacked extension in Chrome (this is the same folder you use on any laptop after `git pull`). After changing extension files, reload it in `chrome://extensions`, then refresh a supported property page.
 
 For the local companion instead of the hosted Worker, use an ignored `.env` with a Google Places API key and run `npm start`; switch `API` in `extension/background.js` back to `http://127.0.0.1:8787` only for local testing.
 
@@ -65,4 +65,4 @@ Required Worker secrets: `GOOGLE_MAPS_API_KEY` and `RATE_LIMIT_SALT`. Do not pla
 
 ## Release work remaining
 
-See `RELEASE_CHECKLIST.md`. The key remaining work is real-browser testing on all three sites, Google attribution compliance review, privacy policy publication, Chrome Web Store metadata, and locking the Worker to the final Store extension ID.
+See `RELEASE_CHECKLIST.md`. Repo-side Store prep (privacy policy file, listing copy, 1.0.0 pack) is in `docs/` and `npm run pack`. You still need real-browser testing, GitHub Pages (or another HTTPS host) for the privacy URL, an unlisted Store upload from your Google account, then `ALLOWED_EXTENSION_ID` on the Worker.

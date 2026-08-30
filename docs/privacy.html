@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>StayCheck privacy policy</title>
+  <style>
+    body { max-width: 42rem; margin: 2rem auto; padding: 0 1.25rem 3rem; font: 16px/1.55 system-ui, sans-serif; color: #182238; }
+    h1, h2 { letter-spacing: -0.03em; }
+    h1 { font-size: 1.75rem; }
+    h2 { margin-top: 1.75rem; font-size: 1.15rem; }
+    p, li { color: #334155; }
+  </style>
+</head>
+<body>
+  <h1>StayCheck privacy policy</h1>
+  <p>Last updated: 30 August 2026</p>
+  <p>StayCheck is a Chrome extension that shows Google Maps ratings and review excerpts next to a hotel listing you already opened on Booking.com, Agoda, or Expedia. It is a comparison aid. It does not rank hotels, create an account, or sell data.</p>
+
+  <h2>Data StayCheck reads on the page</h2>
+  <p>When you open a supported hotel <strong>property</strong> page (not a search-results page), the extension reads the hotel name and address from structured data or visible page text so it can search Google Maps for that property.</p>
+
+  <h2>Data sent to StayCheck’s server</h2>
+  <p>The extension sends the hotel name and address, plus an anonymous installation identifier, to StayCheck’s Cloudflare Worker at <code>staycheck-api.msannan121.workers.dev</code>. That server calls Google Places API (New) and returns a match, candidate listings, rating, review count, Maps links, and up to five Google review excerpts.</p>
+  <p>The server does not store hotel names, addresses, or review text. It stores only anonymous usage counters (installation/month, salted IP/day, and a global daily cap) so Google Maps costs stay bounded.</p>
+
+  <h2>Data kept on your device</h2>
+  <p>Chrome local storage on your profile may keep:</p>
+  <ul>
+    <li>an anonymous installation ID used for monthly usage limits</li>
+    <li>Google Place IDs you confirm when automatic matching is uncertain</li>
+    <li>optional diagnostic events (event name, short error text, timestamp, page path) until you copy or clear them</li>
+  </ul>
+  <p>Diagnostic details stay on the device unless you choose <strong>Help diagnose an issue</strong> → <strong>Copy details</strong>.</p>
+
+  <h2>What StayCheck does not do</h2>
+  <ul>
+    <li>no accounts, analytics SDKs, advertising, or payment processing</li>
+    <li>no scanning of search-result pages or browsing history</li>
+    <li>no sale or brokerage of user data</li>
+    <li>no use of Google review text to train models or build a review warehouse</li>
+  </ul>
+
+  <h2>Google APIs</h2>
+  <p>The use of information received from Google APIs will adhere to the Chrome Web Store User Data Policy, including the Limited Use requirements. Review excerpts are Google Maps content. StayCheck displays Google attribution, author names, author photos when provided, author profile links, and links to the original Maps listing.</p>
+
+  <h2>Contact</h2>
+  <p>Questions about this policy: use the support email listed on the StayCheck Chrome Web Store listing.</p>
+</body>
+</html>

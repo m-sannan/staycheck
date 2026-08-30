@@ -42,7 +42,7 @@ async function allowRequest(request, env) {
     consume(env.USAGE, 'ip', dayBucket(), ipHash, DAILY_IP_REQUEST_LIMIT),
     consume(env.USAGE, 'global', dayBucket(), 'all', DAILY_GLOBAL_REQUEST_LIMIT)
   ]);
-  if (!installation) return { ok: false, error: 'This installation has reached its 10 Google review checks for this month.', status: 429 };
+  if (!installation) return { ok: false, error: 'This installation has reached its 20 Google review checks for this month.', status: 429 };
   if (!ipLimit) return { ok: false, error: 'Too many checks from this network today. Please try again tomorrow.', status: 429 };
   if (!globalLimit) return { ok: false, error: 'StayCheck has reached today’s public usage limit. Please try again tomorrow.', status: 429 };
   return { ok: true };
@@ -58,7 +58,7 @@ function tokens(value = '') { return new Set(String(value).toLowerCase().normali
 function overlap(left, right) { const a = tokens(left); const b = tokens(right); if (!a.size || !b.size) return 0; return [...a].filter((token) => b.has(token)).length / new Set([...a, ...b]).size; }
 function confidenceLabel(match) { if (match.confidence >= 55 && match.nameScore >= 0.55 && match.addressScore >= 0.35) return 'high'; if (match.confidence >= 48 && match.nameScore >= 0.35 && match.addressScore >= 0.15) return 'possible'; return 'low'; }
 function candidate(listing, place) { const nameScore = overlap(listing.name, place.displayName?.text); const addressScore = overlap(listing.address, place.formattedAddress); const match = { id: place.id, name: place.displayName?.text || 'Unnamed place', address: place.formattedAddress || '', rating: place.rating, reviewCount: place.userRatingCount || 0, mapsUrl: place.googleMapsUri, confidence: Math.round((nameScore * 0.7 + addressScore * 0.3) * 100), nameScore, addressScore }; return { ...match, confidenceLabel: confidenceLabel(match) }; }
-function publicDetails(place) { return { name: place.displayName?.text, address: place.formattedAddress, rating: place.rating, reviewCount: place.userRatingCount || 0, mapsUrl: place.googleMapsUri, reviews: (place.reviews || []).slice(0, 5).map((review) => ({ author: review.authorAttribution?.displayName || 'Google user', authorUrl: review.authorAttribution?.uri, rating: review.rating, text: review.text?.text || '', relativeDate: review.relativePublishTimeDescription, publishedAt: review.publishTime, mapsUrl: review.googleMapsUri })) }; }
+function publicDetails(place) { return { name: place.displayName?.text, address: place.formattedAddress, rating: place.rating, reviewCount: place.userRatingCount || 0, mapsUrl: place.googleMapsUri, reviews: (place.reviews || []).slice(0, 5).map((review) => ({ author: review.authorAttribution?.displayName || 'Google user', authorUrl: review.authorAttribution?.uri, authorPhoto: review.authorAttribution?.photoUri || '', rating: review.rating, text: review.text?.text || '', relativeDate: review.relativePublishTimeDescription, publishedAt: review.publishTime, mapsUrl: review.googleMapsUri })) }; }
 
 export default {
   async fetch(request, env) {

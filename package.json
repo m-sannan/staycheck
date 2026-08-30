@@ -1,11 +1,12 @@
 {
   "name": "staycheck",
   "private": true,
-  "version": "0.1.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "start": "node backend/src/server.js",
     "test": "node --test backend/test/*.test.js",
+    "pack": "mkdir -p dist && rm -f dist/staycheck-extension.zip && (cd extension && zip -r ../dist/staycheck-extension.zip . -x '*.DS_Store')",
     "worker:dev": "wrangler dev --config worker/wrangler.jsonc",
     "worker:deploy": "wrangler deploy --config worker/wrangler.jsonc"
   },
