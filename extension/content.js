@@ -2,6 +2,9 @@
   let currentPanel;
   let running = false;
   let reviewOrder = 'relevance';
+  let lastUrl = location.href;
+  let attempts = 0;
+  let lastSkipPath = '';
   const clean = (value) => String(value || '').replace(/\s+/g, ' ').trim();
   const node = (tag, text, className) => { const element = document.createElement(tag); if (text !== undefined) element.textContent = text; if (className) element.className = className; return element; };
   const externalLink = (text, href, className) => { const element = node('a', text, className); element.href = href; element.target = '_blank'; element.rel = 'noopener noreferrer'; return element; };
@@ -12,7 +15,7 @@
   function provider() { if (/agoda\.com$/i.test(location.hostname)) return 'agoda'; if (/expedia\./i.test(location.hostname)) return 'expedia'; return 'booking'; }
   function providerName() { return { booking: 'Booking.com', agoda: 'Agoda', expedia: 'Expedia' }[provider()]; }
   function reviewerPoolText() { return `Google reviews are from a different reviewer pool than ${providerName()}.`; }
-  function isPropertyPage() { const path = location.pathname.toLowerCase(); if (provider() === 'booking') return /\/hotel\//.test(path); if (provider() === 'agoda') return /\/hotel\//.test(path) && /\.html$/.test(path); return /\.hotel-information$/i.test(path); }
+  function isPropertyPage() { const path = location.pathname.toLowerCase(); if (provider() === 'booking') return /\/hotel\//.test(path); if (provider() === 'agoda') return /\/hotel\//.test(path) && /\.html$/.test(path) && !/\/reviews\//.test(path); return /\.hotel-information$/i.test(path); }
 
   function flatten(value) { return Array.isArray(value) ? value.flatMap(flatten) : value?.['@graph'] ? flatten(value['@graph']) : [value]; }
   function jsonLdHotel() { for (const script of document.querySelectorAll('script[type="application/ld+json"]')) { try { for (const item of flatten(JSON.parse(script.textContent))) { const types = Array.isArray(item?.['@type']) ? item['@type'] : [item?.['@type']]; if (types.some((type) => ['Hotel', 'LodgingBusiness'].includes(type)) && item.name) { const address = typeof item.address === 'string' ? item.address : [item.address?.streetAddress, item.address?.addressLocality, item.address?.addressRegion, item.address?.postalCode, item.address?.addressCountry].filter(Boolean).join(', '); return { name: clean(item.name), address: clean(address) }; } } } catch { /* Structured data is optional. */ } } }
@@ -25,15 +28,15 @@
 
   function header(content, { match = '', expanded = false } = {}) {
     const row = node('div', undefined, 'staycheck-row'); const logo = document.createElement('img'); logo.src = chrome.runtime.getURL('assets/icon-48.png'); logo.alt = ''; logo.className = 'staycheck-brand-icon'; row.append(logo, node('div', 'StayCheck', 'staycheck-name'));
-    const main = node('div', undefined, 'staycheck-main'); main.append(content); row.append(main); if (match) row.append(node('div', `✓ ${match}`, 'staycheck-match'));
-    const actions = node('div', undefined, 'staycheck-actions'); const retry = node('button', '↻', 'staycheck-icon-button'); retry.type = 'button'; retry.title = 'Retry Google review check'; retry.onclick = () => start(true); actions.append(retry);
-    if (expanded !== null) { const toggle = node('button', expanded ? '⌃' : '⌄', 'staycheck-icon-button'); toggle.type = 'button'; toggle.title = expanded ? 'Hide review excerpts' : 'Show review excerpts'; toggle.dataset.staycheckToggle = 'true'; actions.append(toggle); } row.append(actions); return row;
+    const main = node('div', undefined, 'staycheck-main'); main.append(content); row.append(main); if (match) row.append(node('div', `\u2713 ${match}`, 'staycheck-match'));
+    const actions = node('div', undefined, 'staycheck-actions'); const retry = node('button', '\u21bb', 'staycheck-icon-button'); retry.type = 'button'; retry.title = 'Retry Google review check'; retry.onclick = () => start(true); actions.append(retry);
+    if (expanded !== null) { const toggle = node('button', expanded ? '\u2303' : '\u2304', 'staycheck-icon-button'); toggle.type = 'button'; toggle.title = expanded ? 'Hide review excerpts' : 'Show review excerpts'; toggle.dataset.staycheckToggle = 'true'; actions.append(toggle); } row.append(actions); return row;
   }
-  function loading(label = 'Finding this property on Google Maps…') { const content = node('div'); content.append(node('div', label, 'staycheck-title'), node('div', 'Matching the property and its address before showing review excerpts.', 'staycheck-subtitle')); return header(content, { expanded: null }); }
+  function loading(label = 'Finding this property on Google Maps\u2026') { const content = node('div'); content.append(node('div', label, 'staycheck-title'), node('div', 'Matching the property and its address before showing review excerpts.', 'staycheck-subtitle')); return header(content, { expanded: null }); }
   function renderError(message) { const host = panel(); if (!host) return; host.replaceChildren(loading('Google review check unavailable')); host.append(node('div', message, 'staycheck-error')); const retry = node('button', 'Retry Google review check', 'staycheck-retry'); retry.type = 'button'; retry.onclick = () => start(true); host.append(retry); log('check failed', message); }
   function sortedReviews(reviews) { if (reviewOrder !== 'newest') return reviews; return [...reviews].sort((a, b) => Date.parse(b.publishedAt || 0) - Date.parse(a.publishedAt || 0)); }
   function sortControl(place, detailsOpen) { const control = node('div', undefined, 'staycheck-segmented'); for (const [value, label] of [['relevance', 'Relevant'], ['newest', 'Newest shown']]) { const button = node('button', label); button.type = 'button'; button.setAttribute('aria-pressed', String(reviewOrder === value)); button.onclick = () => { reviewOrder = value; log('review order changed', value); renderDetails(place, detailsOpen); }; control.append(button); } return control; }
-  function ratingStars(rating) { const value = Number(rating); const percent = Number.isFinite(value) ? Math.max(0, Math.min(100, (value / 5) * 100)) : 0; const stars = node('span', undefined, 'staycheck-stars'); stars.style.setProperty('--staycheck-star-fill', `${percent}%`); stars.setAttribute('role', 'img'); stars.setAttribute('aria-label', Number.isFinite(value) ? `${value} out of 5 stars` : 'Rating unavailable'); stars.append(node('span', '★★★★★', 'staycheck-stars-base'), node('span', '★★★★★', 'staycheck-stars-fill')); return stars; }
+  function ratingStars(rating) { const value = Number(rating); const percent = Number.isFinite(value) ? Math.max(0, Math.min(100, (value / 5) * 100)) : 0; const stars = node('span', undefined, 'staycheck-stars'); stars.style.setProperty('--staycheck-star-fill', `${percent}%`); stars.setAttribute('role', 'img'); stars.setAttribute('aria-label', Number.isFinite(value) ? `${value} out of 5 stars` : 'Rating unavailable'); stars.append(node('span', '\u2605\u2605\u2605\u2605\u2605', 'staycheck-stars-base'), node('span', '\u2605\u2605\u2605\u2605\u2605', 'staycheck-stars-fill')); return stars; }
   function reviewAuthor(review) { return review.author || review.authorName || review.authorAttribution?.displayName || 'Google Maps contributor'; }
   function reviewAuthorUrl(review) { return review.authorUrl || review.authorUri || review.authorAttribution?.uri || ''; }
   function reviewAuthorPhoto(review) { return review.authorPhotoUrl || review.authorPhotoUri || review.authorAttribution?.photoUri || ''; }
@@ -41,19 +44,72 @@
   function attributableReviews(reviews) { return (reviews || []).filter((review) => reviewAuthorPhoto(review) && reviewMapsUrl(review)); }
   function renderDetails(place, detailsOpen = false, context = {}) {
     const host = panel(); if (!host) return; host.replaceChildren();
-    const content = node('div'); const title = node('div', undefined, 'staycheck-rating-summary'); const source = node('div', undefined, 'staycheck-source'); const attribution = node('span', 'Google Maps', 'staycheck-source-name'); attribution.setAttribute('translate', 'no'); source.append(attribution); const score = node('div', undefined, 'staycheck-score'); score.append(node('span', String(place.rating ?? '—'), 'staycheck-rating'), node('span', ' / 5', 'staycheck-out-of')); const ratingVisual = node('div', undefined, 'staycheck-rating-visual'); ratingVisual.append(ratingStars(place.rating), node('span', 'Google Maps rating', 'staycheck-rating-label')); const count = node('span', `${place.reviewCount ?? 0} reviews`, 'staycheck-count'); title.append(source, score, ratingVisual, count); content.append(title, node('div', reviewerPoolText(), 'staycheck-subtitle'));
-    const details = node('div', undefined, 'staycheck-details'); details.hidden = !detailsOpen; const top = node('div', undefined, 'staycheck-detail-top'); const location = node('div'); location.append(node('p', place.address || 'Address unavailable', 'staycheck-address')); if (place.mapsUrl) location.append(externalLink('Google Maps ↗', place.mapsUrl, 'staycheck-open')); top.append(location); if (context.property) { const matchControls = node('div', undefined, 'staycheck-match-controls'); const another = node('button', 'Wrong place? Choose another', 'staycheck-text-control'); another.type = 'button'; another.onclick = () => chooseAnother(context.property); matchControls.append(another); if (context.saved) { const forget = node('button', 'Forget saved match', 'staycheck-text-control'); forget.type = 'button'; forget.onclick = async () => { await storage('staycheck-forget-match', { key: propertyKey(context.property) }); log('saved match forgotten'); chooseAnother(context.property); }; matchControls.append(forget); } top.append(matchControls); } details.append(top);
+    const content = node('div'); const title = node('div', undefined, 'staycheck-rating-summary'); const source = node('div', undefined, 'staycheck-source'); const attribution = node('span', 'Google Maps', 'staycheck-source-name'); attribution.setAttribute('translate', 'no'); source.append(attribution); const score = node('div', undefined, 'staycheck-score'); score.append(node('span', String(place.rating ?? '\u2014'), 'staycheck-rating'), node('span', ' / 5', 'staycheck-out-of')); const ratingVisual = node('div', undefined, 'staycheck-rating-visual'); ratingVisual.append(ratingStars(place.rating), node('span', 'Google Maps rating', 'staycheck-rating-label')); const count = node('span', `${place.reviewCount ?? 0} reviews`, 'staycheck-count'); title.append(source, score, ratingVisual, count); content.append(title, node('div', reviewerPoolText(), 'staycheck-subtitle'));
+    const details = node('div', undefined, 'staycheck-details'); details.hidden = !detailsOpen; const top = node('div', undefined, 'staycheck-detail-top'); const locationBox = node('div'); locationBox.append(node('p', place.address || 'Address unavailable', 'staycheck-address')); if (place.mapsUrl) locationBox.append(externalLink('Google Maps \u2197', place.mapsUrl, 'staycheck-open')); top.append(locationBox); if (context.property) { const matchControls = node('div', undefined, 'staycheck-match-controls'); const another = node('button', 'Wrong place? Choose another', 'staycheck-text-control'); another.type = 'button'; another.onclick = () => chooseAnother(context.property); matchControls.append(another); if (context.saved) { const forget = node('button', 'Forget saved match', 'staycheck-text-control'); forget.type = 'button'; forget.onclick = async () => { await storage('staycheck-forget-match', { key: propertyKey(context.property) }); log('saved match forgotten'); chooseAnother(context.property); }; matchControls.append(forget); } top.append(matchControls); } details.append(top);
     const toolbar = node('div', undefined, 'staycheck-review-toolbar'); toolbar.append(node('h3', 'Review excerpts', 'staycheck-section-title'), sortControl(place, detailsOpen)); details.append(toolbar);
-    const reviews = sortedReviews(attributableReviews(place.reviews)); const grid = node('div', undefined, 'staycheck-review-grid'); for (const review of reviews) { const author = reviewAuthor(review); const sourceUrl = reviewMapsUrl(review); const card = node('article', undefined, 'staycheck-review'); card.dataset.rating = String(Math.round(review.rating || 0)); const byline = node('div', undefined, 'staycheck-review-byline'); const avatar = document.createElement('img'); avatar.src = reviewAuthorPhoto(review); avatar.alt = `${author}'s Google Maps profile photo`; avatar.className = 'staycheck-review-avatar'; avatar.referrerPolicy = 'no-referrer'; const authorUrl = reviewAuthorUrl(review); byline.append(avatar, authorUrl ? externalLink(author, authorUrl, 'staycheck-review-name') : node('span', author, 'staycheck-review-name')); const metadata = [review.rating ? `${review.rating}/5` : '', review.relativeDate || '', review.visitDate ? `Visited ${review.visitDate}` : ''].filter(Boolean).join(' · '); card.append(byline, node('div', metadata, 'staycheck-review-meta'), node('p', review.text || '')); card.append(externalLink('View this review on Google Maps ↗', sourceUrl)); grid.append(card); } details.append(grid);
+    const reviews = sortedReviews(attributableReviews(place.reviews)); const grid = node('div', undefined, 'staycheck-review-grid'); for (const review of reviews) { const author = reviewAuthor(review); const sourceUrl = reviewMapsUrl(review); const card = node('article', undefined, 'staycheck-review'); card.dataset.rating = String(Math.round(review.rating || 0)); const byline = node('div', undefined, 'staycheck-review-byline'); const avatar = document.createElement('img'); avatar.src = reviewAuthorPhoto(review); avatar.alt = `${author}'s Google Maps profile photo`; avatar.className = 'staycheck-review-avatar'; avatar.referrerPolicy = 'no-referrer'; const authorUrl = reviewAuthorUrl(review); byline.append(avatar, authorUrl ? externalLink(author, authorUrl, 'staycheck-review-name') : node('span', author, 'staycheck-review-name')); const metadata = [review.rating ? `${review.rating}/5` : '', review.relativeDate || '', review.visitDate ? `Visited ${review.visitDate}` : ''].filter(Boolean).join(' \u00b7 '); card.append(byline, node('div', metadata, 'staycheck-review-meta'), node('p', review.text || '')); card.append(externalLink('View this review on Google Maps \u2197', sourceUrl)); grid.append(card); } details.append(grid);
     if (!reviews.length) details.append(node('p', 'No review excerpts are available with the required Google Maps author and source attribution. Open Google Maps for all reviews.', 'staycheck-note'));
     details.append(node('p', reviewOrder === 'newest' ? 'Newest shown sorts only these five Google-provided excerpts by date. Open Google Maps for the complete newest-review feed.' : 'Google provides these excerpts in relevance order.', 'staycheck-note'));
     const row = header(content, { match: context.matchLabel || 'High-confidence match', expanded: detailsOpen }); row.querySelector('[data-staycheck-toggle]')?.addEventListener('click', () => renderDetails(place, !detailsOpen, context)); host.append(row, details);
   }
-  function renderChoices(candidates, property) { const host = panel(); if (!host) return; host.replaceChildren(header(node('div', 'Choose the Google Maps listing', 'staycheck-title'), { expanded: null })); const body = node('div', undefined, 'staycheck-details'); body.hidden = false; body.append(node('p', 'StayCheck did not find a safe automatic match. Choose the correct address before loading reviews.', 'staycheck-address')); for (const place of candidates) { const choice = node('button', undefined, 'staycheck-choice'); choice.type = 'button'; const label = place.confidenceLabel === 'possible' ? 'Possible match' : 'Low-confidence match'; choice.append(node('strong', place.name), document.createElement('br'), node('span', place.address), document.createElement('br'), node('span', `${label} · ${place.rating ?? '—'} / 5 · ${place.reviewCount ?? 0} reviews`, 'staycheck-meta')); choice.onclick = async () => { await storage('staycheck-save-match', { key: propertyKey(property), match: { placeId: place.id, propertyName: property.name, propertyAddress: property.address, source: location.hostname } }); log('match chosen by user'); loadDetails(place.id, { property, saved: true, matchLabel: 'Matched by you' }); }; body.append(choice); } host.append(body); log('match selection needed', `${candidates.length} candidates`); }
-  async function chooseAnother(property) { const host = panel(); if (!host) return; host.replaceChildren(loading('Finding alternative Google Maps listings…')); try { const result = await request('/lookup', property); renderChoices(result.candidates || [], property); } catch (error) { renderError(error.message); } }
-  async function loadDetails(placeId, context = {}) { const host = panel(); if (!host) return; host.replaceChildren(loading('Loading Google review excerpts…')); try { const place = await request('/details', { placeId }); log('review excerpts loaded', `${place.reviewCount || 0} total reviews`); renderDetails(place, false, context); } catch (error) { renderError(error.message); } }
-  async function start(force = false) { if (running) return; const property = hotel(); const host = panel(); if (!property || !host) { if (force) log('force check failed', 'Hotel heading was not available yet'); return; } running = true; host.replaceChildren(loading(force ? 'Running StayCheck again…' : undefined)); log(force ? 'force check started' : 'automatic check started'); try { const saved = force ? null : (await storage('staycheck-get-match', { key: propertyKey(property) }))?.match; if (saved?.placeId) { log('saved match reused', saved.placeName || saved.placeId); await loadDetails(saved.placeId, { property, saved: true, matchLabel: 'Matched by you' }); return; } const result = await request('/lookup', property); if (result.status === 'matched') { log('high-confidence match', `${result.place.confidence}%`); await loadDetails(result.place.id, { property, matchLabel: 'High-confidence match' }); } else if (result.candidates?.length) renderChoices(result.candidates, property); else renderError('Google Maps did not return a matching property.'); } catch (error) { renderError(error.message); } finally { running = false; } }
-  if (!isPropertyPage()) return;
-  chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => { if (message?.type === 'staycheck-force-run') { start(true); sendResponse({ ok: true }); } });
-  let attempts = 0; const observer = new MutationObserver(() => { if (currentPanel?.isConnected) return observer.disconnect(); if (++attempts > 80) { log('panel did not mount', 'Hotel header not found'); return observer.disconnect(); } start(); }); start(); observer.observe(document.documentElement, { childList: true, subtree: true });
+  function renderChoices(candidates, property) { const host = panel(); if (!host) return; host.replaceChildren(header(node('div', 'Choose the Google Maps listing', 'staycheck-title'), { expanded: null })); const body = node('div', undefined, 'staycheck-details'); body.hidden = false; body.append(node('p', 'StayCheck did not find a safe automatic match. Choose the correct address before loading reviews.', 'staycheck-address')); for (const place of candidates) { const choice = node('button', undefined, 'staycheck-choice'); choice.type = 'button'; const label = place.confidenceLabel === 'possible' ? 'Possible match' : 'Low-confidence match'; choice.append(node('strong', place.name), document.createElement('br'), node('span', place.address), document.createElement('br'), node('span', `${label} \u00b7 ${place.rating ?? '\u2014'} / 5 \u00b7 ${place.reviewCount ?? 0} reviews`, 'staycheck-meta')); choice.onclick = async () => { await storage('staycheck-save-match', { key: propertyKey(property), match: { placeId: place.id, propertyName: property.name, propertyAddress: property.address, source: location.hostname } }); log('match chosen by user'); loadDetails(place.id, { property, saved: true, matchLabel: 'Matched by you' }); }; body.append(choice); } host.append(body); log('match selection needed', `${candidates.length} candidates`); }
+  async function chooseAnother(property) { const host = panel(); if (!host) return; host.replaceChildren(loading('Finding alternative Google Maps listings\u2026')); try { const result = await request('/lookup', property); renderChoices(result.candidates || [], property); } catch (error) { renderError(error.message); } }
+  async function loadDetails(placeId, context = {}) { const host = panel(); if (!host) return; host.replaceChildren(loading('Loading Google review excerpts\u2026')); try { const place = await request('/details', { placeId }); log('review excerpts loaded', `${place.reviewCount || 0} total reviews`); renderDetails(place, false, context); } catch (error) { renderError(error.message); } }
+  async function start(force = false) { if (running) return; if (!isPropertyPage()) return; const property = hotel(); const host = panel(); if (!property || !host) { if (force) log('force check failed', 'Hotel heading was not available yet'); return; } running = true; host.replaceChildren(loading(force ? 'Running StayCheck again\u2026' : undefined)); log(force ? 'force check started' : 'automatic check started'); try { const saved = force ? null : (await storage('staycheck-get-match', { key: propertyKey(property) }))?.match; if (saved?.placeId) { log('saved match reused', saved.placeName || saved.placeId); await loadDetails(saved.placeId, { property, saved: true, matchLabel: 'Matched by you' }); return; } const result = await request('/lookup', property); if (result.status === 'matched') { log('high-confidence match', `${result.place.confidence}%`); await loadDetails(result.place.id, { property, matchLabel: 'High-confidence match' }); } else if (result.candidates?.length) renderChoices(result.candidates, property); else renderError('Google Maps did not return a matching property.'); } catch (error) { renderError(error.message); } finally { running = false; } }
+
+  function resetForNavigation() {
+    currentPanel?.remove();
+    currentPanel = null;
+    running = false;
+    attempts = 0;
+  }
+
+  function evaluatePage() {
+    if (!isPropertyPage()) {
+      if (lastSkipPath !== location.pathname) {
+        lastSkipPath = location.pathname;
+        log('skipped non-property page', location.pathname);
+      }
+      return;
+    }
+    lastSkipPath = '';
+    start();
+  }
+
+  function onUrlChange() {
+    if (location.href === lastUrl) return;
+    lastUrl = location.href;
+    resetForNavigation();
+    evaluatePage();
+  }
+
+  chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+    if (message?.type !== 'staycheck-force-run') return;
+    if (!isPropertyPage()) {
+      log('force check skipped', location.pathname);
+      sendResponse({ ok: false, reason: 'not-property-page' });
+      return;
+    }
+    start(true);
+    sendResponse({ ok: true });
+  });
+
+  const observer = new MutationObserver(() => {
+    if (location.href !== lastUrl) {
+      onUrlChange();
+      return;
+    }
+    if (!isPropertyPage() || currentPanel?.isConnected) return;
+    if (++attempts > 80) {
+      log('panel did not mount', 'Hotel header not found');
+      attempts = 0;
+      return;
+    }
+    start();
+  });
+
+  window.addEventListener('popstate', onUrlChange);
+  setInterval(() => { if (location.href !== lastUrl) onUrlChange(); }, 500);
+  evaluatePage();
+  observer.observe(document.documentElement, { childList: true, subtree: true });
 })();
